@@ -269,7 +269,7 @@ function refreshResultView(dateBegin, dateEnd) {
             accordionRow.className = "collapse";
 
             const accordionCell = document.createElement("td");
-            accordionCell.colSpan = 2;
+            accordionCell.colSpan = 3;
             accordionRow.appendChild(accordionCell);
 
             result.tarif.months.forEach((m) => {
@@ -296,12 +296,19 @@ function refreshResultView(dateBegin, dateEnd) {
                 const cell6HeaderDailyDetail = document.createElement("th");
                 const cell7HeaderDailyDetail = document.createElement("th");
                 cell1HeaderDailyDetail.innerHTML = "Jour";
+                cell1HeaderDailyDetail.style.textAlign = "center";
                 cell2HeaderDailyDetail.innerHTML = "Consommation totale";
+                cell2HeaderDailyDetail.style.textAlign = "right";
                 cell3HeaderDailyDetail.innerHTML = "Conso HC (kWh)";
+                cell3HeaderDailyDetail.style.textAlign = "right";
                 cell4HeaderDailyDetail.innerHTML = "Estimation HC (€)";
+                cell4HeaderDailyDetail.style.textAlign = "right";
                 cell5HeaderDailyDetail.innerHTML = "Conso HP (kWh)";
+                cell5HeaderDailyDetail.style.textAlign = "right";
                 cell6HeaderDailyDetail.innerHTML = "Estimation HP (€)";
+                cell6HeaderDailyDetail.style.textAlign = "right";
                 cell7HeaderDailyDetail.innerHTML = "Total (€)";
+                cell7HeaderDailyDetail.style.textAlign = "right";
 
                 headerDailyDetail.appendChild(cell1HeaderDailyDetail);
                 headerDailyDetail.appendChild(cell2HeaderDailyDetail);
@@ -310,6 +317,8 @@ function refreshResultView(dateBegin, dateEnd) {
                 headerDailyDetail.appendChild(cell5HeaderDailyDetail);
                 headerDailyDetail.appendChild(cell6HeaderDailyDetail);
                 headerDailyDetail.appendChild(cell7HeaderDailyDetail);
+
+                let maxConsoDay = getDayWithMaxConso(m.days);
 
                 for (let j = m.days.length - 1; j >= 0; j--) {
                     const bodyDailyDetail = document.createElement("tr");
@@ -322,13 +331,31 @@ function refreshResultView(dateBegin, dateEnd) {
                     const cell6BodyDailyDetail = document.createElement("td");
                     const cell7BodyDailyDetail = document.createElement("td");
 
-                    cell1BodyDailyDetail.innerHTML = m.days[j].date;
-                    cell2BodyDailyDetail.innerHTML = (m.days[j].conso / 1000).toFixed(2) + "kWh";
-                    cell3BodyDailyDetail.innerHTML = (m.days[j].consoHC / 1000).toFixed(2) + "kWh";
-                    cell4BodyDailyDetail.innerHTML = m.days[j].priceHC.toFixed(2) + "€";
-                    cell5BodyDailyDetail.innerHTML = (m.days[j].consoHP / 1000).toFixed(2) + "kWh";
-                    cell6BodyDailyDetail.innerHTML = m.days[j].priceHP.toFixed(2) + "€";
-                    cell7BodyDailyDetail.innerHTML = m.days[j].price.toFixed(2) + "€";
+                    // On reformatte la date pour avoir le bon format
+                    const date = new Date(m.days[j].date);
+                    const [isoDate, time] = date.toISOString().split('T');
+                    const [year, month, day] = isoDate.split('-');
+                    cell1BodyDailyDetail.innerHTML = day + "/" + month + "/" + year;
+                    cell2BodyDailyDetail.innerHTML = (m.days[j].conso / 1000).toFixed(2) + "&nbsp;kWh";
+                    cell3BodyDailyDetail.innerHTML = (m.days[j].consoHC / 1000).toFixed(2) + "&nbsp;kWh";
+                    cell4BodyDailyDetail.innerHTML = m.days[j].priceHC.toFixed(2) + "&nbsp;€";
+                    cell5BodyDailyDetail.innerHTML = (m.days[j].consoHP / 1000).toFixed(2) + "&nbsp;kWh";
+                    cell6BodyDailyDetail.innerHTML = m.days[j].priceHP.toFixed(2) + "&nbsp;€";
+                    cell7BodyDailyDetail.innerHTML = m.days[j].price.toFixed(2) + "&nbsp;€";
+
+                    cell1BodyDailyDetail.style.textAlign = "center";
+                    cell2BodyDailyDetail.style.textAlign = "right";
+                    cell3BodyDailyDetail.style.textAlign = "right";
+                    cell4BodyDailyDetail.style.textAlign = "right";
+                    cell5BodyDailyDetail.style.textAlign = "right";
+                    cell6BodyDailyDetail.style.textAlign = "right";
+                    cell7BodyDailyDetail.style.textAlign = "right";
+
+                    if (maxConsoDay && maxConsoDay.date === m.days[j].date) {
+                        cell1BodyDailyDetail.style.color = "red";
+                        cell2BodyDailyDetail.style.color = "red";
+                    }
+
                     bodyDailyDetail.appendChild(cell1BodyDailyDetail);
                     bodyDailyDetail.appendChild(cell2BodyDailyDetail);
                     bodyDailyDetail.appendChild(cell3BodyDailyDetail);
@@ -346,13 +373,26 @@ function refreshResultView(dateBegin, dateEnd) {
             const cellTarifPrice = document.createElement("td");
             tarifRow.appendChild(cellTarifPrice);
             cellTarifPrice.innerHTML = result.tarif.price.toFixed(2) + " € TTC <br>(" + (result.tarif.price / 12).toFixed(2) + " €/mois)";
-            
+
             const cellDiffencePrice = document.createElement("td");
             tarifRow.appendChild(cellDiffencePrice);
             cellDiffencePrice.innerHTML = "+ " + (result.tarif.price - resultsOrdered[0].tarif.price).toFixed(2) + " € TTC <br>(" + ((result.tarif.price - resultsOrdered[0].tarif.price) / 12).toFixed(2) + " €/mois)";
-            
+
             currentRow++;
         });
+}
+
+// On va regarder si c'est la journée ou l'on a consommé le plus dans le mois
+function getDayWithMaxConso(days) {
+    let maxConso = 0;
+    let maxConsoDay = null;
+    days.forEach(day => {
+        if (day.conso > maxConso) {
+            maxConso = day.conso;
+            maxConsoDay = day;
+        }
+    });
+    return maxConsoDay;
 }
 
 function getMonthName(monthNumber) {
